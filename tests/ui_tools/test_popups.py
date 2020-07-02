@@ -9,6 +9,7 @@ from zulipterminal.ui_tools.views import (
     AboutView,
     EditHistoryView,
     EditModeView,
+    EmojiPickerView,
     HelpView,
     MsgInfoView,
     PopUpConfirmationView,
@@ -926,4 +927,45 @@ class TestStreamMembersView:
         size = widget_size(self.stream_members_view)
         super_keypress = mocker.patch(VIEWS + ".urwid.ListBox.keypress")
         self.stream_members_view.keypress(size, key)
+        super_keypress.assert_called_once_with(size, expected_key)
+
+
+class TestEmojiPickerView:
+    @pytest.fixture(autouse=True)
+    def mock_external_classes(self, mocker, monkeypatch, message_fixture):
+        self.controller = mocker.Mock()
+        self.view = self.controller.view
+        mocker.patch.object(
+            self.controller, "maximum_popup_dimensions", return_value=(64, 64)
+        )
+        mocker.patch(VIEWS + ".urwid.SimpleFocusListWalker", return_value=[])
+        self.emoji_picker_view = EmojiPickerView(
+            self.controller, "ADD EMOJI", list(), message_fixture, self.view
+        )
+
+    @pytest.mark.parametrize("key", keys_for_command("SEARCH_EMOJIS"))
+    def test_keypress_search_emoji(self, key, mocker, widget_size):
+        size = widget_size(self.emoji_picker_view)
+        self.controller.is_in_editor_mode.return_value = False
+        self.emoji_picker_view.keypress(size, key)
+        assert self.emoji_picker_view.get_focus() == "header"
+
+    @pytest.mark.parametrize("key", keys_for_command("GO_BACK"))
+    @pytest.mark.parametrize("allow_update", [True, False])
+    def test_keypress_exit_called(self, key, mocker, widget_size, allow_update):
+        size = widget_size(self.emoji_picker_view)
+        self.emoji_picker_view.keypress(size, key)
+        if allow_update:
+            assert self.controller.exit_popup.called
+        else:
+            assert self.emoji_picker_view.get_focus() == "body"
+
+    def test_keypress_navigation(
+        self, mocker, widget_size, navigation_key_expected_key_pair
+    ):
+        self.emoji_picker_view.set_focus("body")
+        key, expected_key = navigation_key_expected_key_pair
+        size = widget_size(self.emoji_picker_view)
+        super_keypress = mocker.patch(VIEWS + ".urwid.ListBox.keypress")
+        self.emoji_picker_view.keypress(size, key)
         super_keypress.assert_called_once_with(size, expected_key)

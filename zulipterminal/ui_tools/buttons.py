@@ -333,20 +333,29 @@ class TopicButton(TopButton):
 
 class EmojiButton(TopButton):
     def __init__(
-        self, controller: Any, width: int, emoji_name: str, message: Message
+        self,
+        *,
+        controller: Any,
+        width: int,
+        emoji_unit: Tuple[str, str],
+        message: Message,
+        is_selected: Callable[[str], bool],
+        toggle_selection: Callable[[str, str], None],
     ) -> None:
         self.controller = controller
-        self.emoji_name = emoji_name
         self.message = message
+        self.is_selected = is_selected
+        self.toggle_selection = toggle_selection
+        self.emoji_name, self.emoji_code = emoji_unit
 
         super().__init__(
             controller=controller,
-            caption=emoji_name,
+            caption=self.emoji_name,
             prefix_character="",
             show_function=self.update_emoji_button,
             width=width,
         )
-        if self._has_user_reacted_to_msg():
+        if self._has_user_reacted_to_msg() or is_selected(self.emoji_name):
             self.update_widget((None, f" {CHECK_MARK} "), None)
 
     def _has_user_reacted_to_msg(self) -> bool:
@@ -356,9 +365,16 @@ class EmojiButton(TopButton):
 
     def update_emoji_button(self) -> None:
         if self._has_user_reacted_to_msg():
-            self.update_widget((None, ""), None)
+            if self.is_selected(self.emoji_name):
+                self.update_widget((None, f" {CHECK_MARK} "), None)
+            else:
+                self.update_widget((None, ""), None)
         else:
-            self.update_widget((None, f" {CHECK_MARK} "), None)
+            if self.is_selected(self.emoji_name):
+                self.update_widget((None, ""), None)
+            else:
+                self.update_widget((None, f" {CHECK_MARK} "), None)
+        self.toggle_selection(self.emoji_code, self.emoji_name)
 
 
 class DecodedStream(TypedDict):
