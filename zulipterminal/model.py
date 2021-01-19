@@ -148,6 +148,14 @@ class Model:
 
         self._subscribe_to_streams(self.initial_data["subscriptions"])
 
+        # NOTE: The date_created field of stream has been added in feature
+        # level 30, server version 4. For consistency we add this field
+        # on server iterations even before this with value of None.
+        feature_level = self.server_feature_level
+        if feature_level is None or feature_level < 30:
+            for stream in self.stream_dict.values():
+                stream["date_created"] = None
+
         # NOTE: The expected response has been upgraded from
         # [stream_name, topic] to [stream_name, topic, date_muted] in
         # feature level 1, server version 3.0.

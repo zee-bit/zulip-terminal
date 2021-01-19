@@ -714,14 +714,17 @@ class TestStreamInfoView:
         )
         self.controller.model.is_muted_stream.return_value = False
         self.controller.model.is_pinned_stream.return_value = False
+        self.controller.model.formatted_local_time.return_value = ""
         mocker.patch(VIEWS + ".urwid.SimpleFocusListWalker", return_value=[])
         self.stream_id = 10
+        self.controller.model.server_feature_level = 40
         self.controller.model.stream_dict = {
             self.stream_id: {
                 "name": "books",
                 "invite_only": False,
                 "rendered_description": "<p>Hey</p>",
                 "subscribers": [],
+                "date_created": 1472047124,
                 "stream_weekly_traffic": 123,
             }
         }
@@ -740,6 +743,87 @@ class TestStreamInfoView:
         self.controller.show_stream_members.assert_called_once_with(
             stream_id=self.stream_id,
         )
+
+    @pytest.mark.parametrize(
+        ["stream", "stream_id", "server_feature_level", "expected_height"],
+        [
+            (
+                {
+                    "name": "books",
+                    "invite_only": False,
+                    "rendered_description": "hey",
+                    "subscribers": [],
+                    "date_created": None,
+                    "stream_weekly_traffic": 123,
+                },
+                15,
+                None,
+                9,
+            ),
+            (
+                {
+                    "name": "desktop",
+                    "invite_only": True,
+                    "rendered_description": "screen",
+                    "subscribers": [],
+                    "date_created": None,
+                    "stream_weekly_traffic": 45,
+                },
+                101,
+                24,
+                9,
+            ),
+            (
+                {
+                    "name": "test",
+                    "invite_only": False,
+                    "rendered_description": "test here",
+                    "subscribers": [],
+                    "date_created": 1472091253,
+                    "stream_weekly_traffic": 7,
+                },
+                242,
+                30,
+                10,
+            ),
+            (
+                {
+                    "name": "announce",
+                    "invite_only": False,
+                    "rendered_description": "announcements",
+                    "subscribers": [],
+                    "date_created": None,
+                    "stream_weekly_traffic": 0,
+                },
+                541,
+                29,
+                9,
+            ),
+            (
+                {
+                    "name": "ZT",
+                    "invite_only": False,
+                    "rendered_description": "zulip-terminal",
+                    "subscribers": [],
+                    "date_created": 1472047124,
+                    "stream_weekly_traffic": 140,
+                },
+                1562,
+                40,
+                10,
+            ),
+        ],
+    )
+    def test_popup_height(
+        self, stream, stream_id, server_feature_level, expected_height
+    ):
+        self.controller.model.stream_dict = {stream_id: stream}
+
+        stream_info_view = StreamInfoView(self.controller, stream_id)
+
+        # height = 1(description) + 2(blank lines) + 2(category)
+        # + 2(checkboxes) + [2-3](fields, depending upon server_feature_level)
+        assert stream_info_view.height == expected_height
 
     @pytest.mark.parametrize(
         "rendered_description, expected_markup",
@@ -774,6 +858,7 @@ class TestStreamInfoView:
                 "name": "ZT",
                 "invite_only": False,
                 "subscribers": [],
+                "date_created": 1472047124,
                 "stream_weekly_traffic": 123,
                 "rendered_description": rendered_description,
             }
@@ -840,7 +925,7 @@ class TestStreamInfoView:
 
     @pytest.mark.parametrize("key", (*keys_for_command("ENTER"), " "))
     def test_checkbox_toggle_mute_stream(self, mocker, key, widget_size):
-        mute_checkbox = self.stream_info_view.widgets[7]
+        mute_checkbox = self.stream_info_view.widgets[-2]
         toggle_mute_status = self.controller.model.toggle_stream_muted_status
         stream_id = self.stream_info_view.stream_id
         size = widget_size(mute_checkbox)
@@ -851,7 +936,7 @@ class TestStreamInfoView:
 
     @pytest.mark.parametrize("key", (*keys_for_command("ENTER"), " "))
     def test_checkbox_toggle_pin_stream(self, mocker, key, widget_size):
-        pin_checkbox = self.stream_info_view.widgets[8]
+        pin_checkbox = self.stream_info_view.widgets[-1]
         toggle_pin_status = self.controller.model.toggle_stream_pinned_status
         stream_id = self.stream_info_view.stream_id
         size = widget_size(pin_checkbox)
