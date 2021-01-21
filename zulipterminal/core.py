@@ -8,6 +8,7 @@ from platform import platform
 from types import TracebackType
 from typing import Any, List, Optional, Tuple, Type
 
+import pyperclip
 import urwid
 import zulip
 from typing_extensions import Literal
@@ -337,6 +338,29 @@ class Controller:
             self.model.toggle_stream_muted_status, button.stream_id
         )
         self.loop.widget = PopUpConfirmationView(self, question, mute_this_stream)
+
+    def copy_stream_email(self, stream_email: str) -> None:
+        try:
+            pyperclip.copy(stream_email)
+            clipboard_text = pyperclip.paste()
+            assert clipboard_text == stream_email
+            self.view.set_footer_text("Stream E-mail copied successfully!", 3)
+        except Exception:
+            body = [
+                ("bold", " Pyperclip "),
+                (None, " could not find a copy/paste mechanism for your system."),
+                (None, "\nThis error should only appear on Linux. "),
+                (
+                    None,
+                    "You can fix this by installing any ONE of the "
+                    "copy/paste mechanisms using:\n\n",
+                ),
+                ("bold", "sudo apt-get install xclip [Recommended]\n"),
+                ("bold", "sudo apt-get install xsel"),
+            ]
+            self.show_pop_up(
+                NoticeView(self, body, 60, "UTILITY PACKAGE MISSING"), "area:error"
+            )
 
     def _narrow_to(self, anchor: Optional[int], **narrow: Any) -> None:
         already_narrowed = self.model.set_narrow(**narrow)

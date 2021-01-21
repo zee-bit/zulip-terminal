@@ -726,6 +726,7 @@ class TestStreamInfoView:
                 "subscribers": [],
                 "date_created": 1472047124,
                 "stream_weekly_traffic": 123,
+                "email_address": "books.hs6w8td6dw5ewfyd8w7e6wg.com",
             }
         }
         self.stream_info_view = StreamInfoView(self.controller, self.stream_id)
@@ -755,10 +756,11 @@ class TestStreamInfoView:
                     "subscribers": [],
                     "date_created": None,
                     "stream_weekly_traffic": 123,
+                    "email_address": "books.y4f8vt7ttcr6yfdt4@chat.zulip.com",
                 },
                 15,
                 None,
-                9,
+                10,
             ),
             (
                 {
@@ -768,10 +770,11 @@ class TestStreamInfoView:
                     "subscribers": [],
                     "date_created": None,
                     "stream_weekly_traffic": 45,
+                    "email_address": "desktop.6dt76ef3e3t3t33g@chat.zulip.com",
                 },
                 101,
                 24,
-                9,
+                10,
             ),
             (
                 {
@@ -781,10 +784,11 @@ class TestStreamInfoView:
                     "subscribers": [],
                     "date_created": 1472091253,
                     "stream_weekly_traffic": 7,
+                    "email_address": "test-37fy3v308r7ehw7gekjdu7teg@gmail.com",
                 },
                 242,
                 30,
-                10,
+                11,
             ),
             (
                 {
@@ -794,10 +798,11 @@ class TestStreamInfoView:
                     "subscribers": [],
                     "date_created": None,
                     "stream_weekly_traffic": 0,
+                    "email_address": "announce-h7gdyft5jr9vfu38rhyu@hotmail.com",
                 },
                 541,
                 29,
-                9,
+                10,
             ),
             (
                 {
@@ -807,10 +812,11 @@ class TestStreamInfoView:
                     "subscribers": [],
                     "date_created": 1472047124,
                     "stream_weekly_traffic": 140,
+                    "email_address": "zt-37ege6eg36e5dgd6ujt9htjg@chat.zulip.org",
                 },
                 1562,
                 40,
-                10,
+                11,
             ),
         ],
     )
@@ -822,8 +828,16 @@ class TestStreamInfoView:
         stream_info_view = StreamInfoView(self.controller, stream_id)
 
         # height = 1(description) + 2(blank lines) + 2(category)
-        # + 2(checkboxes) + [2-3](fields, depending upon server_feature_level)
+        # + 2(checkboxes) + [2-4](fields, depending upon server_feature_level)
         assert stream_info_view.height == expected_height
+
+    @pytest.mark.parametrize("key", keys_for_command("COPY_STREAM_EMAIL"))
+    def test_keypress_copy_stream_email(self, mocker, key, widget_size):
+        size = widget_size(self.stream_info_view)
+        self.stream_info_view.keypress(size, key)
+        self.controller.copy_stream_email.assert_called_once_with(
+            self.stream_info_view.stream_email
+        )
 
     @pytest.mark.parametrize(
         "rendered_description, expected_markup",
@@ -861,6 +875,7 @@ class TestStreamInfoView:
                 "date_created": 1472047124,
                 "stream_weekly_traffic": 123,
                 "rendered_description": rendered_description,
+                "email_address": "announce-2a1dsc32ay782fm5@zulip.org",
             }
         }
 

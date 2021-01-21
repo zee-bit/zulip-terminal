@@ -1047,7 +1047,7 @@ class PopUpView(urwid.ListBox):
 
 class NoticeView(PopUpView):
     def __init__(
-        self, controller: Any, notice_text: str, width: int, title: str
+        self, controller: Any, notice_text: Any, width: int, title: str
     ) -> None:
         widgets = [
             urwid.Divider(),
@@ -1182,6 +1182,8 @@ class StreamInfoView(PopUpView):
 
         total_members = len(stream["subscribers"])
         member_keys = ", ".join(map(repr, keys_for_command("STREAM_MEMBERS")))
+        self.stream_email = stream["email_address"]
+        email_key = ", ".join(map(repr, keys_for_command("COPY_STREAM_EMAIL")))
 
         weekly_msg_count = stream["stream_weekly_traffic"]
 
@@ -1205,6 +1207,10 @@ class StreamInfoView(PopUpView):
                     (
                         "Stream Members",
                         f"{total_members} (Press {member_keys} to view list)",
+                    ),
+                    (
+                        "Stream Email address",
+                        f"Press {email_key} to copy Stream Email address",
                     ),
                 ],
             ),
@@ -1268,6 +1274,8 @@ class StreamInfoView(PopUpView):
     def keypress(self, size: urwid_Size, key: str) -> str:
         if is_command_key("STREAM_MEMBERS", key):
             self.controller.show_stream_members(stream_id=self.stream_id)
+        elif is_command_key("COPY_STREAM_EMAIL", key):
+            self.controller.copy_stream_email(self.stream_email)
         return super().keypress(size, key)
 
 
