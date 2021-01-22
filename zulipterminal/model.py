@@ -156,6 +156,32 @@ class Model:
             for stream in self.stream_dict.values():
                 stream["date_created"] = None
 
+        def message_retention_days_response(days: int, org_default: bool) -> str:
+            suffix = " [Organization default]" if org_default else ""
+            return ("Indefinite" if days == -1 else str(days)) + suffix
+
+        # NOTE: The message_retention_days response has been added in
+        # server v3.0, feature level 17. For consistency we add this field
+        # on server iterations even before this with value of None. There are
+        # two special values for this field:
+        # 1. None: It inherits organization-level setting for this field.
+        # 2. -1: Messages in this stream are stored indefinitely.
+        for stream in self.stream_dict.values():
+            if feature_level is None or feature_level < 17:
+                stream["message_retention_days"] = None
+            else:
+                if stream["message_retention_days"] is None:
+                    organization_default = self.initial_data[
+                        "realm_message_retention_days"
+                    ]
+                    stream["message_retention_days"] = message_retention_days_response(
+                        organization_default, True
+                    )
+                else:
+                    stream["message_retention_days"] = message_retention_days_response(
+                        stream["message_retention_days"], False
+                    )
+
         # NOTE: The expected response has been upgraded from
         # [stream_name, topic] to [stream_name, topic, date_muted] in
         # feature level 1, server version 3.0.

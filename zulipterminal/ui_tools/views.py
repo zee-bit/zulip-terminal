@@ -1180,6 +1180,13 @@ class StreamInfoView(PopUpView):
             else []
         )
 
+        # New in feature level 17, server verison 3.0
+        msg_retention_days = (
+            [("Message retention days", stream["message_retention_days"])]
+            if stream["message_retention_days"] is not None
+            else []
+        )
+
         total_members = len(stream["subscribers"])
         member_keys = ", ".join(map(repr, keys_for_command("STREAM_MEMBERS")))
         self.stream_email = stream["email_address"]
@@ -1206,6 +1213,7 @@ class StreamInfoView(PopUpView):
             (
                 "Stream Details",
                 date_created
+                + msg_retention_days
                 + [
                     ("Weekly Message Count", str(weekly_msg_count)),
                     (

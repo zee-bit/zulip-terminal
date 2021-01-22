@@ -727,6 +727,7 @@ class TestStreamInfoView:
                 "date_created": 1472047124,
                 "stream_weekly_traffic": 123,
                 "email_address": "books.hs6w8td6dw5ewfyd8w7e6wg.com",
+                "message_retention_days": "10",
             }
         }
         self.stream_info_view = StreamInfoView(self.controller, self.stream_id)
@@ -757,6 +758,7 @@ class TestStreamInfoView:
                     "date_created": None,
                     "stream_weekly_traffic": None,
                     "email_address": "books.y4f8vt7ttcr6yfdt4@chat.zulip.com",
+                    "message_retention_days": None,
                 },
                 15,
                 None,
@@ -771,10 +773,11 @@ class TestStreamInfoView:
                     "date_created": None,
                     "stream_weekly_traffic": 45,
                     "email_address": "desktop.6dt76ef3e3t3t33g@chat.zulip.com",
+                    "message_retention_days": "Indefinite [Organization default]",
                 },
                 101,
                 24,
-                10,
+                11,
             ),
             (
                 {
@@ -785,10 +788,11 @@ class TestStreamInfoView:
                     "date_created": 1472091253,
                     "stream_weekly_traffic": None,
                     "email_address": "test-37fy3v308r7ehw7gekjdu7teg@gmail.com",
+                    "message_retention_days": "31",
                 },
                 242,
                 30,
-                11,
+                13,
             ),
             (
                 {
@@ -799,10 +803,11 @@ class TestStreamInfoView:
                     "date_created": None,
                     "stream_weekly_traffic": 0,
                     "email_address": "announce-h7gdyft5jr9vfu38rhyu@hotmail.com",
+                    "message_retention_days": "Indefinite",
                 },
                 541,
                 29,
-                10,
+                11,
             ),
             (
                 {
@@ -813,10 +818,11 @@ class TestStreamInfoView:
                     "date_created": 1472047124,
                     "stream_weekly_traffic": 140,
                     "email_address": "zt-37ege6eg36e5dgd6ujt9htjg@chat.zulip.org",
+                    "message_retention_days": "72 [Organization default]",
                 },
                 1562,
                 40,
-                11,
+                12,
             ),
         ],
     )
@@ -828,7 +834,7 @@ class TestStreamInfoView:
         stream_info_view = StreamInfoView(self.controller, stream_id)
 
         # height = 1(description) + 2(blank lines) + 2(category)
-        # + 2(checkboxes) + [2-4](fields, depending upon server_feature_level)
+        # + 2(checkboxes) + [2-5](fields, depending upon server_feature_level)
         assert stream_info_view.height == expected_height
 
     @pytest.mark.parametrize("key", keys_for_command("COPY_STREAM_EMAIL"))
@@ -876,6 +882,7 @@ class TestStreamInfoView:
                 "stream_weekly_traffic": 123,
                 "rendered_description": rendered_description,
                 "email_address": "announce-2a1dsc32ay782fm5@zulip.org",
+                "message_retention_days": "72 [Organization default]",
             }
         }
 
