@@ -81,25 +81,48 @@ class TestPopUpView:
         self.command = "COMMAND"
         self.title = "Generic title"
         self.width = 16
-        self.widget = mocker.Mock()
-        mocker.patch.object(self.widget, "rows", return_value=1)
-        self.widgets = [self.widget]
+        self.body = mocker.Mock()
+        self.header = mocker.Mock()
+        self.footer = mocker.Mock()
+        mocker.patch.object(self.body, "rows", return_value=1)
+        mocker.patch.object(self.header, "rows", return_value=1)
+        mocker.patch.object(self.footer, "rows", return_value=1)
+        self.body = [
+            self.body,
+        ]
+        self.header = [
+            self.header,
+        ]
+        self.footer = [
+            self.footer,
+        ]
         self.list_walker = mocker.patch(
             VIEWS + ".urwid.SimpleFocusListWalker", return_value=[]
         )
-        self.super_init = mocker.patch(VIEWS + ".urwid.ListBox.__init__")
-        self.super_keypress = mocker.patch(VIEWS + ".urwid.ListBox.keypress")
+        self.super_init = mocker.patch(VIEWS + ".urwid.Frame.__init__")
+        self.super_keypress = mocker.patch(VIEWS + ".urwid.Frame.keypress")
         self.pop_up_view = PopUpView(
-            self.controller, self.widgets, self.command, self.width, self.title
+            self.controller,
+            self.body,
+            self.command,
+            self.width,
+            self.title,
+            self.header,
+            self.footer,
         )
 
-    def test_init(self):
+    def test_init(self, mocker):
         assert self.pop_up_view.controller == self.controller
         assert self.pop_up_view.command == self.command
         assert self.pop_up_view.title == self.title
         assert self.pop_up_view.width == self.width
-        self.list_walker.assert_called_once_with(self.widgets)
-        self.super_init.assert_called_once_with(self.pop_up_view.log)
+        self.list_walker.assert_has_calls(
+            [mocker.call(self.body), mocker.call(self.header), mocker.call(self.footer)]
+        )
+
+        self.super_init.assert_called_once_with(
+            self.pop_up_view.body, header=mocker.ANY, footer=mocker.ANY
+        )
 
     @pytest.mark.parametrize("key", keys_for_command("GO_BACK"))
     def test_keypress_GO_BACK(self, key, widget_size):
