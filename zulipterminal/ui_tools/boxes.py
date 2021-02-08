@@ -1689,7 +1689,11 @@ class PanelSearchBox(urwid.Edit):
     """
 
     def __init__(
-        self, panel_view: Any, search_command: str, update_function: Callable[..., None]
+        self,
+        panel_view: Any,
+        search_command: str,
+        update_function: Callable[..., None],
+        fixed_search_caption: bool = False,
     ) -> None:
         self.panel_view = panel_view
         self.search_command = search_command
@@ -1698,7 +1702,10 @@ class PanelSearchBox(urwid.Edit):
             urwid.Text([" ", INVALID_MARKER, " No Results"]), "search_error"
         )
         urwid.connect_signal(self, "change", update_function)
-        super().__init__(caption="", edit_text=self.search_text)
+        if not fixed_search_caption:
+            super().__init__(caption="", edit_text=self.search_text)
+        else:
+            super().__init__(caption=self.search_text, edit_text="")
 
     def reset_search_text(self) -> None:
         self.set_caption("")

@@ -1614,7 +1614,7 @@ class EmojiPickerView(PopUpView):
         self.selected_emojis: Dict[str, str] = {}
         self.emoji_buttons = self.generate_emoji_buttons(emoji_units)
         self.emoji_search = PanelSearchBox(
-            self, "SEARCH_EMOJIS", self.update_emoji_list
+            self, "SEARCH_EMOJIS", self.update_emoji_list, fixed_search_caption=True
         )
         search_box = urwid.LineBox(
             self.emoji_search,
@@ -1637,6 +1637,9 @@ class EmojiPickerView(PopUpView):
             title,
             header=[search_box],
         )
+        self.set_focus("header")
+        self.is_popup_search_open = True
+        self.controller.enter_editor_mode_with(self.emoji_search)
 
     @asynch
     def update_emoji_list(
@@ -1693,17 +1696,22 @@ class EmojiPickerView(PopUpView):
     def generate_emoji_buttons(
         self, emoji_units: List[Tuple[str, str]]
     ) -> List[EmojiButton]:
-        return [
-            EmojiButton(
-                controller=self.controller,
-                width=self.width,
-                emoji_unit=emoji_unit,
-                message=self.message,
-                is_selected=self.is_selected_emoji,
-                toggle_selection=self.add_or_remove_selected_emoji,
+        emoji_buttons = []
+        for index, emoji_unit in enumerate(emoji_units):
+            emoji_buttons.append(
+                urwid.AttrWrap(
+                    EmojiButton(
+                        controller=self.controller,
+                        width=self.width,
+                        emoji_unit=emoji_unit,
+                        message=self.message,
+                        is_selected=self.is_selected_emoji,
+                        toggle_selection=self.add_or_remove_selected_emoji,
+                    ),
+                    None if index % 2 else "popup_contrast",
+                )
             )
-            for emoji_unit in emoji_units
-        ]
+        return emoji_buttons
 
     def keypress(self, size: urwid_Size, key: str) -> str:
         if (
@@ -1719,6 +1727,9 @@ class EmojiPickerView(PopUpView):
             self.set_focus("header")
             self.is_popup_search_open = True
             self.emoji_search.set_edit_text("")
+            self.emoji_search.set_caption(
+                f"Search [{', '.join(keys_for_command('SEARCH_EMOJIS'))}]: "
+            )
             self.controller.enter_editor_mode_with(self.emoji_search)
             return key
         elif is_command_key("GO_BACK", key) or is_command_key("ADD_REACTION", key):

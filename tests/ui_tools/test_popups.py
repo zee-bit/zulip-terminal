@@ -988,7 +988,7 @@ class TestEmojiPickerView:
         self.emojis_display = self.emoji_picker_view.emojis_display
         emojis_display_name = [emoji.emoji_name for emoji in self.emojis_display]
         assert emojis_display_name == assert_list
-        assert self.emoji_picker_view.get_focus() == "body"
+        assert self.emoji_picker_view.get_focus() == "header"
 
     @pytest.mark.parametrize("key", keys_for_command("SEARCH_EMOJIS"))
     def test_keypress_search_emoji(self, key, mocker, widget_size):
@@ -1005,12 +1005,13 @@ class TestEmojiPickerView:
         if allow_update:
             assert self.controller.exit_popup.called
         else:
-            assert self.emoji_picker_view.get_focus() == "body"
+            assert self.emoji_picker_view.get_focus() == "header"
 
     def test_keypress_navigation(
         self, mocker, widget_size, navigation_key_expected_key_pair
     ):
         self.emoji_picker_view.set_focus("body")
+        self.emoji_picker_view.is_popup_search_open = False
         key, expected_key = navigation_key_expected_key_pair
         size = widget_size(self.emoji_picker_view)
         super_keypress = mocker.patch(VIEWS + ".urwid.ListBox.keypress")
