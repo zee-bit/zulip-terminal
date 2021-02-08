@@ -24,7 +24,7 @@ from zulipterminal.config.symbols import (
     STREAM_MARKER_PUBLIC,
 )
 from zulipterminal.config.ui_mappings import EDIT_MODE_CAPTIONS
-from zulipterminal.helper import Message, asynch, match_stream, match_user
+from zulipterminal.helper import Message, asynch, match_emoji, match_stream, match_user
 from zulipterminal.server_url import near_message_url
 from zulipterminal.ui_tools.boxes import MessageBox, PanelSearchBox
 from zulipterminal.ui_tools.buttons import (
@@ -1612,7 +1612,7 @@ class EmojiPickerView(PopUpView):
         self.message = message
         self.controller = controller
         self.selected_emojis: Dict[str, str] = {}
-        emoji_buttons = self.generate_emoji_buttons(emoji_units)
+        self.emoji_buttons = self.generate_emoji_buttons(emoji_units)
         self.emoji_search = PanelSearchBox(
             self, "SEARCH_EMOJIS", self.update_emoji_list
         )
@@ -1628,9 +1628,10 @@ class EmojiPickerView(PopUpView):
             brcorner="─",
         )
         self.empty_search = False
+        self.search_lock = threading.Lock()
         super().__init__(
             controller,
-            emoji_buttons,
+            self.emoji_buttons,
             "ADD_REACTION",
             self.width,
             title,
@@ -1644,7 +1645,39 @@ class EmojiPickerView(PopUpView):
         new_text: Optional[str] = None,
         emoji_list: Any = None,
     ) -> None:
-        pass
+        """
+        Updates emoji list via PanelSearchBox.
+        """
+        assert (emoji_list is None and search_box is not None) or (
+            emoji_list is not None and search_box is None and new_text is None
+        )
+
+        # Return if the method is called by PanelSearchBox without
+        # self.emoji_search being defined.
+        if not hasattr(self, "emoji_search"):
+            return
+
+        with self.search_lock:
+            if new_text and new_text != self.emoji_search.search_text:
+                self.emojis_display = [
+                    searched_emoji
+                    for searched_emoji in self.emoji_buttons
+                    if match_emoji(searched_emoji.emoji_name, new_text)
+                ]
+            else:
+                self.emojis_display = self.emoji_buttons
+
+            self.empty_search = len(self.emojis_display) == 0
+
+            body_content = self.emojis_display
+            if self.empty_search:
+                body_content = [self.emoji_search.search_error]
+
+            self.contents["body"] = (
+                urwid.ListBox(urwid.SimpleFocusListWalker(body_content)),
+                None,
+            )
+            self.controller.update_screen()
 
     def is_selected_emoji(self, emoji_name: str) -> bool:
         if emoji_name in self.selected_emojis.values():
@@ -1673,9 +1706,12 @@ class EmojiPickerView(PopUpView):
         ]
 
     def keypress(self, size: urwid_Size, key: str) -> str:
-        if is_command_key("ENTER", key) and self.controller.is_in_editor_mode():
+        if (
+            is_command_key("ENTER", key)
+            and self.controller.is_in_editor_mode()
+            and not self.empty_search
+        ):
             self.is_popup_search_open = False
-            self.controller.exit_editor_mode()
         if (
             is_command_key("SEARCH_EMOJIS", key)
             and not self.controller.is_in_editor_mode()

@@ -943,6 +943,53 @@ class TestEmojiPickerView:
             self.controller, "ADD EMOJI", list(), message_fixture, self.view
         )
 
+    @pytest.mark.parametrize(
+        "emoji_names",
+        [
+            (
+                "action",
+                "agent",
+                "angel",
+                "anger",
+                "angry",
+                "engineer",
+                "embarrassed",
+                "eye",
+                "ball",
+                "cat",
+                "hi",
+                "lightning",
+                "smile",
+                "smiley",
+                "smirk",
+                "smoking",
+            )
+        ],
+    )
+    @pytest.mark.parametrize(
+        ["search_string", "assert_list", "match_return_value"],
+        [
+            ("e", ["engineer", "embarrassed", "eye"], True),
+            ("sm", ["smile", "smiley", "smirk", "smoking"], True),
+            ("ang", ["angel", "anger", "angry"], True),
+            ("abc", [], False),
+            ("q", [], False),
+        ],
+    )
+    def test_update_emoji_list(
+        self, mocker, emoji_names, search_string, assert_list, match_return_value
+    ):
+        self.emoji_picker_view.emoji_buttons = (
+            self.emoji_picker_view.generate_emoji_buttons(emoji_names)
+        )
+        list_w = mocker.patch(VIEWS + ".urwid.SimpleFocusListWalker")
+
+        self.emoji_picker_view.update_emoji_list("SEARCH_EMOJIS", search_string)
+        self.emojis_display = self.emoji_picker_view.emojis_display
+        emojis_display_name = [emoji.emoji_name for emoji in self.emojis_display]
+        assert emojis_display_name == assert_list
+        assert self.emoji_picker_view.get_focus() == "body"
+
     @pytest.mark.parametrize("key", keys_for_command("SEARCH_EMOJIS"))
     def test_keypress_search_emoji(self, key, mocker, widget_size):
         size = widget_size(self.emoji_picker_view)

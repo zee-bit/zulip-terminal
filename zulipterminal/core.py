@@ -263,8 +263,16 @@ class Controller:
         self.show_pop_up(msg_info_view, "area:msg")
 
     def show_emoji_picker(self, message: Message) -> None:
+        all_emoji_units = [
+            (emoji_name, emoji["code"])
+            for emoji_name, emoji in self.model.active_emoji_data.items()
+        ]
         emoji_picker_view = EmojiPickerView(
-            self, "Add/Remove reactions", [("thumbs_up", "1f44d")], message, self.view
+            self,
+            "Add/Remove reactions",
+            all_emoji_units,
+            message,
+            self.view,
         )
         self.show_pop_up(emoji_picker_view, "area:msg")
 
