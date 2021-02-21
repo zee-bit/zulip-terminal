@@ -153,6 +153,25 @@ echo 'export ZT_NOTIFICATION_SOUND=Ping' >> ~/.zshenv
 source ~/.zshenv
 ```
 
+### Stream Email
+
+Zulip Terminal allows users to copy Stream Email, from the [Stream information popup](docs/hotkeys.md#stream-list-actions). This is currently achieved through a python module, [`Pyperclip`](https://pypi.org/project/pyperclip/).
+
+#### Linux
+
+On Linux, this module makes use of `xclip` or `xsel` commands, which should already come with the OS. If none of these commands are installed on your system, then install any ONE using:
+```
+sudo apt-get install xclip [Recommended]
+```
+OR
+```
+sudo apt-get install xsel
+```
+
+#### OSX and WSL
+
+No additional package is required to enable copying of stream email.
+
 ## Contributor Guidelines
 
 Zulip Terminal is being built by the awesome [Zulip](https://zulip.com/team) community.
