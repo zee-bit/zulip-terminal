@@ -1693,10 +1693,22 @@ class EmojiPickerView(PopUpView):
         else:
             self.selected_emojis.update({emoji_code: emoji_name})
 
+    def count_reactions(self, emoji_name: str) -> int:
+        num_reacts = 0
+        for reaction in self.message["reactions"]:
+            if reaction["emoji_name"] == emoji_name:
+                num_reacts += 1
+        return num_reacts
+
     def generate_emoji_buttons(
         self, emoji_units: List[Tuple[str, str]]
     ) -> List[EmojiButton]:
         emoji_buttons = []
+        emoji_units = sorted(
+            emoji_units,
+            key=lambda emoji_unit: self.count_reactions(emoji_unit[0]),
+            reverse=True,
+        )
         for index, emoji_unit in enumerate(emoji_units):
             emoji_buttons.append(
                 urwid.AttrWrap(
@@ -1705,6 +1717,7 @@ class EmojiPickerView(PopUpView):
                         width=self.width,
                         emoji_unit=emoji_unit,
                         message=self.message,
+                        reaction_count=self.count_reactions(emoji_unit[0]),
                         is_selected=self.is_selected_emoji,
                         toggle_selection=self.add_or_remove_selected_emoji,
                     ),

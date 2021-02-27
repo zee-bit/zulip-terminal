@@ -339,12 +339,14 @@ class EmojiButton(TopButton):
         width: int,
         emoji_unit: Tuple[str, str],
         message: Message,
+        reaction_count: int = 0,
         is_selected: Callable[[str], bool],
         toggle_selection: Callable[[str, str], None],
     ) -> None:
         self.controller = controller
         self.message = message
         self.is_selected = is_selected
+        self.reaction_count = reaction_count
         self.toggle_selection = toggle_selection
         self.emoji_name, self.emoji_code = emoji_unit
 

@@ -332,7 +332,7 @@ class TestUserButton:
 
 class TestEmojiButton:
     @pytest.mark.parametrize(
-        "width, emoji_name, message",
+        "width, emoji_name, message, count",
         [
             (
                 25,
@@ -342,8 +342,9 @@ class TestEmojiButton:
                     "type": "stream",
                     "reactions": [{"emoji_name": "thumbs_up", "user": [{"id": 232}]}],
                 },
+                1,
             ),
-            (15, "+1", {"id": 24553, "type": "private", "reactions": []}),
+            (15, "+1", {"id": 24553, "type": "private", "reactions": []}, 0),
             (
                 10,
                 "thumbs_up",
@@ -355,15 +356,16 @@ class TestEmojiButton:
                         {"emoji_name": "smile", "user": [{"id": 52}]},
                     ],
                 },
+                2,
             ),
-            (8, "smile", {"id": 57382, "type": "stream", "reactions": []}),
+            (8, "smile", {"id": 57382, "type": "stream", "reactions": []}, 0),
         ],
     )
-    def test_init_emoji_button(self, mocker, width, emoji_name, message):
+    def test_init_emoji_button(self, mocker, width, emoji_name, message, count):
         controller = mocker.Mock()
         controller.model.has_user_reacted_to_msg = mocker.Mock(return_value=False)
         top_button = mocker.patch(TOPBUTTON + ".__init__")
-        emoji_button = EmojiButton(controller, width, emoji_name, message)
+        emoji_button = EmojiButton(controller, width, emoji_name, message, count)
 
         top_button.assert_called_once_with(
             controller=controller,
