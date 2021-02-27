@@ -1671,7 +1671,6 @@ class EmojiPickerView(PopUpView):
                 self.emojis_display = self.emoji_buttons
 
             self.empty_search = len(self.emojis_display) == 0
-
             body_content = self.emojis_display
             if self.empty_search:
                 body_content = [self.emoji_search.search_error]
@@ -1711,17 +1710,14 @@ class EmojiPickerView(PopUpView):
         )
         for index, emoji_unit in enumerate(emoji_units):
             emoji_buttons.append(
-                urwid.AttrWrap(
-                    EmojiButton(
-                        controller=self.controller,
-                        width=self.width,
-                        emoji_unit=emoji_unit,
-                        message=self.message,
-                        reaction_count=self.count_reactions(emoji_unit[0]),
-                        is_selected=self.is_selected_emoji,
-                        toggle_selection=self.add_or_remove_selected_emoji,
-                    ),
-                    None if index % 2 else "popup_contrast",
+                EmojiButton(
+                    controller=self.controller,
+                    width=self.width,
+                    emoji_unit=emoji_unit,
+                    message=self.message,
+                    reaction_count=self.count_reactions(emoji_unit[0]),
+                    is_selected=self.is_selected_emoji,
+                    toggle_selection=self.add_or_remove_selected_emoji,
                 )
             )
         return emoji_buttons

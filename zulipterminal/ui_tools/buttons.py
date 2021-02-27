@@ -357,25 +357,47 @@ class EmojiButton(TopButton):
             show_function=self.update_emoji_button,
             width=width,
         )
-        if self._has_user_reacted_to_msg() or is_selected(self.emoji_name):
-            self.update_widget((None, f" {CHECK_MARK} "), None)
+
+        has_check_mark = self._has_user_reacted_to_msg() or is_selected(self.emoji_name)
+        self.update_widget((None, self.get_update_widget_text(has_check_mark)), None)
 
     def _has_user_reacted_to_msg(self) -> bool:
         return self.controller.model.has_user_reacted_to_msg(
             self.emoji_name, self.message
         )
 
+    def get_update_widget_text(self, user_reacted: bool) -> str:
+        count_text = str(self.reaction_count) if self.reaction_count > 0 else ""
+        reacted_check_mark = CHECK_MARK if user_reacted else ""
+        return f" {reacted_check_mark} {count_text} "
+
     def update_emoji_button(self) -> None:
         if self._has_user_reacted_to_msg():
-            if self.is_selected(self.emoji_name):
-                self.update_widget((None, f" {CHECK_MARK} "), None)
-            else:
-                self.update_widget((None, ""), None)
+            self.reaction_count = (
+                (self.reaction_count + 1)
+                if self.is_selected(self.emoji_name)
+                else (self.reaction_count - 1)
+            )
+            self.update_widget(
+                (
+                    None,
+                    self.get_update_widget_text(self.is_selected(self.emoji_name)),
+                ),
+                None,
+            )
         else:
-            if self.is_selected(self.emoji_name):
-                self.update_widget((None, ""), None)
-            else:
-                self.update_widget((None, f" {CHECK_MARK} "), None)
+            self.reaction_count = (
+                (self.reaction_count - 1)
+                if self.is_selected(self.emoji_name)
+                else (self.reaction_count + 1)
+            )
+            self.update_widget(
+                (
+                    None,
+                    self.get_update_widget_text(not self.is_selected(self.emoji_name)),
+                ),
+                None,
+            )
         self.toggle_selection(self.emoji_code, self.emoji_name)
 
 

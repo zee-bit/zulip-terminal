@@ -364,6 +364,7 @@ class TestEmojiButton:
     def test_init_emoji_button(self, mocker, width, emoji_name, message, count):
         controller = mocker.Mock()
         controller.model.has_user_reacted_to_msg = mocker.Mock(return_value=False)
+        update_widget = mocker.patch(BUTTONS + ".EmojiButton.update_widget")
         top_button = mocker.patch(TOPBUTTON + ".__init__")
         emoji_button = EmojiButton(controller, width, emoji_name, message, count)
 
@@ -388,7 +389,7 @@ class TestEmojiButton:
             ],
         }
         update_widget = mocker.patch(BUTTONS + ".EmojiButton.update_widget")
-        emoji_button = EmojiButton(controller, 20, "thumbs_up", message)
+        emoji_button = EmojiButton(controller, 20, "thumbs_up", message, 2)
         size = widget_size(emoji_button)
 
         emoji_button.keypress(size, key)
