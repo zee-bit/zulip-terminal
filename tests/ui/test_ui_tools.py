@@ -2297,17 +2297,18 @@ class TestMessageBox:
         ],
         [
             case(
-                {"sender_id": 2, "timestamp": 45},
+                {"sender_id": 2, "timestamp": 45, "subject": "abc"},
                 True,
                 60,
                 {"stream": False, "private": False},
                 {"stream": False, "private": False},
-                " You can't edit messages sent by other users.",
-                " You can't edit messages sent by other users.",
-                id="msg_sent_by_other_user",
+                " You can't edit messages sent by other users that"
+                " already have a topic.",
+                " You can't edit private messages sent by other users.",
+                id="msg_sent_by_other_user_with_topic",
             ),
             case(
-                {"sender_id": 1, "timestamp": 1},
+                {"sender_id": 1, "timestamp": 1, "subject": "hello"},
                 True,
                 60,
                 {"stream": False, "private": False},
@@ -2318,27 +2319,27 @@ class TestMessageBox:
                 id="topic_edit_only_after_time_limit",
             ),
             case(
-                {"sender_id": 1, "timestamp": 45},
+                {"sender_id": 1, "timestamp": 45, "subject": "zt"},
                 False,
                 60,
                 {"stream": False, "private": False},
                 {"stream": False, "private": False},
                 " Editing sent message is disabled.",
                 " Editing sent message is disabled.",
-                id="editing_not_allowed",
+                id="realm_editing_not_allowed",
             ),
             case(
-                {"sender_id": 1, "timestamp": 45},
+                {"sender_id": 1, "timestamp": 45, "subject": "intro"},
                 True,
                 60,
                 {"stream": True, "private": True},
                 {"stream": True, "private": True},
                 None,
                 None,
-                id="all_conditions_met",
+                id="realm_editing_allowed_and_within_time_limit",
             ),
             case(
-                {"sender_id": 1, "timestamp": 1},
+                {"sender_id": 1, "timestamp": 1, "subject": "zulip"},
                 True,
                 0,
                 {"stream": True, "private": True},
@@ -2346,6 +2347,48 @@ class TestMessageBox:
                 None,
                 None,
                 id="no_msg_body_edit_limit",
+            ),
+            case(
+                {"sender_id": 1, "timestamp": 1, "subject": "(no topic)"},
+                True,
+                60,
+                {"stream": False, "private": False},
+                {"stream": True, "private": False},
+                " Only topic editing allowed."
+                " Time Limit for editing the message body has been exceeded.",
+                " Time Limit for editing the message has been exceeded.",
+                id="msg_sent_by_me_with_no_topic",
+            ),
+            case(
+                {"sender_id": 2, "timestamp": 1, "subject": "(no topic)"},
+                True,
+                60,
+                {"stream": False, "private": False},
+                {"stream": True, "private": False},
+                " Only topic editing is allowed."
+                " This is someone else's message but with (no topic).",
+                " You can't edit private messages sent by other users.",
+                id="msg_sent_by_other_with_no_topic",
+            ),
+            case(
+                {"sender_id": 1, "timestamp": 1, "subject": "(no topic)"},
+                False,
+                60,
+                {"stream": False, "private": False},
+                {"stream": False, "private": False},
+                " Editing sent message is disabled.",
+                " Editing sent message is disabled.",
+                id="realm_editing_not_allowed_for_no_topic",
+            ),
+            case(
+                {"sender_id": 1, "timestamp": 45, "subject": "(no topic)"},
+                True,
+                0,
+                {"stream": True, "private": True},
+                {"stream": True, "private": True},
+                None,
+                None,
+                id="no_msg_body_edit_limit_with_no_topic",
             ),
         ],
     )
@@ -2363,6 +2406,8 @@ class TestMessageBox:
         expected_footer_text_private,
         key,
     ):
+        if message_fixture["type"] == "private":
+            to_vary_in_each_message["subject"] = ""
         varied_message = dict(message_fixture, **to_vary_in_each_message)
         message_type = varied_message["type"]
         msg_box = MessageBox(varied_message, self.model, message_fixture)
