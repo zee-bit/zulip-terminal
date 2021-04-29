@@ -377,6 +377,19 @@ class Model:
             response = self.client.add_reaction(reaction_to_toggle_spec)
         display_error_if_present(response, self.controller)
 
+    def has_user_reacted_to_msg(self, emoji_name: str, message: Message) -> bool:
+        for reaction in message["reactions"]:
+            if reaction["emoji_name"] != emoji_name:
+                continue
+            user = reaction["user"]
+            has_user_reacted = (
+                user.get("user_id", None) == self.user_id
+                or user.get("id", None) == self.user_id
+            )
+            if has_user_reacted:
+                return True
+        return False
+
     def session_draft_message(self) -> Optional[Composition]:
         return deepcopy(self._draft)
 

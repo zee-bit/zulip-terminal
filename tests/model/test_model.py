@@ -480,6 +480,42 @@ class TestModel:
         with pytest.raises(AssertionError):
             model.toggle_message_reaction(dict(), "x")
 
+    @pytest.mark.parametrize(
+        "emoji_name, message, expected_has_user_reacted",
+        [
+            case(
+                "thumbs_up",
+                {
+                    "reactions": [
+                        {"emoji_name": "thumbs_up", "user": {"id": 10}},
+                        {"emoji_name": "smiley", "user": {"user_id": 15}},
+                    ]
+                },
+                True,
+                id="react_with_thumbs_up__reacted",
+            ),
+            case(
+                "+1",
+                {
+                    "reactions": [
+                        {"emoji_name": "smiley", "user": {"user_id": 10}},
+                        {"emoji_name": "working_on_it", "user": {"id": 15}},
+                    ]
+                },
+                False,
+                id="react_with_+1__not_reacted",
+            ),
+        ],
+    )
+    def test_has_user_reacted_to_msg(
+        self, mocker, model, emoji_name, message, expected_has_user_reacted
+    ):
+        model.user_id = 10
+
+        has_user_reacted = model.has_user_reacted_to_msg(emoji_name, message)
+
+        assert has_user_reacted == expected_has_user_reacted
+
     @pytest.mark.parametrize("recipient_user_ids", [[5140], [5140, 5179]])
     @pytest.mark.parametrize("status", ["start", "stop"])
     def test_send_typing_status_by_user_ids(
