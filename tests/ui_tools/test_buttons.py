@@ -6,6 +6,7 @@ from urwid import AttrMap, Overlay
 
 from zulipterminal.config.keys import keys_for_command
 from zulipterminal.ui_tools.buttons import (
+    EmojiButton,
     MessageLinkButton,
     StarredButton,
     StreamButton,
@@ -327,6 +328,70 @@ class TestUserButton:
         user_button.keypress(size, enter_key)
 
         assert activate.call_count == 1
+
+
+class TestEmojiButton:
+    @pytest.mark.parametrize(
+        "width, emoji_name, message",
+        [
+            (
+                25,
+                "working_on_it",
+                {
+                    "id": 12432,
+                    "type": "stream",
+                    "reactions": [{"emoji_name": "thumbs_up", "user": [{"id": 232}]}],
+                },
+            ),
+            (15, "+1", {"id": 24553, "type": "private", "reactions": []}),
+            (
+                10,
+                "thumbs_up",
+                {
+                    "id": 74578,
+                    "type": "private",
+                    "recations": [
+                        {"emoji_name": "thumbs_up", "user": [{"id": 10}]},
+                        {"emoji_name": "smile", "user": [{"id": 52}]},
+                    ],
+                },
+            ),
+            (8, "smile", {"id": 57382, "type": "stream", "reactions": []}),
+        ],
+    )
+    def test_init_emoji_button(self, mocker, width, emoji_name, message):
+        controller = mocker.Mock()
+        controller.model.has_user_reacted_to_msg = mocker.Mock(return_value=False)
+        top_button = mocker.patch(TOPBUTTON + ".__init__")
+        emoji_button = EmojiButton(controller, width, emoji_name, message)
+
+        top_button.assert_called_once_with(
+            controller=controller,
+            caption=emoji_name,
+            prefix_character="",
+            show_function=emoji_button.update_emoji_button,
+            width=width,
+        )
+        assert emoji_button.emoji_name == emoji_name
+
+    @pytest.mark.parametrize("key", keys_for_command("ENTER"))
+    def test_keypress_emoji_button(self, mocker, key, widget_size):
+        controller = mocker.Mock()
+        message = {
+            "id": 74578,
+            "type": "private",
+            "recations": [
+                {"emoji_name": "thumbs_up", "user": [{"id": 10}]},
+                {"emoji_name": "smmile", "user": [{"id": 52}]},
+            ],
+        }
+        update_widget = mocker.patch(BUTTONS + ".EmojiButton.update_widget")
+        emoji_button = EmojiButton(controller, 20, "thumbs_up", message)
+        size = widget_size(emoji_button)
+
+        emoji_button.keypress(size, key)
+
+        assert update_widget.called
 
 
 class TestTopicButton:

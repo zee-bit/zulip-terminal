@@ -9,12 +9,13 @@ from typing_extensions import TypedDict
 from zulipterminal.api_types import EditPropagateMode
 from zulipterminal.config.keys import is_command_key, primary_key_for_command
 from zulipterminal.config.symbols import (
+    CHECK_MARK,
     MUTE_MARKER,
     STREAM_MARKER_PRIVATE,
     STREAM_MARKER_PUBLIC,
 )
 from zulipterminal.config.ui_mappings import EDIT_MODE_CAPTIONS
-from zulipterminal.helper import StreamData, hash_util_decode
+from zulipterminal.helper import Message, StreamData, hash_util_decode
 from zulipterminal.urwid_types import urwid_Size
 
 
@@ -328,6 +329,36 @@ class TopicButton(TopButton):
             # Exit topic view
             self.view.left_panel.show_stream_view()
         return super().keypress(size, key)
+
+
+class EmojiButton(TopButton):
+    def __init__(
+        self, controller: Any, width: int, emoji_name: str, message: Message
+    ) -> None:
+        self.controller = controller
+        self.emoji_name = emoji_name
+        self.message = message
+
+        super().__init__(
+            controller=controller,
+            caption=emoji_name,
+            prefix_character="",
+            show_function=self.update_emoji_button,
+            width=width,
+        )
+        if self._has_user_reacted_to_msg():
+            self.update_widget((None, f" {CHECK_MARK} "), None)
+
+    def _has_user_reacted_to_msg(self) -> bool:
+        return self.controller.model.has_user_reacted_to_msg(
+            self.emoji_name, self.message
+        )
+
+    def update_emoji_button(self) -> None:
+        if self._has_user_reacted_to_msg():
+            self.update_widget((None, ""), None)
+        else:
+            self.update_widget((None, f" {CHECK_MARK} "), None)
 
 
 class DecodedStream(TypedDict):
