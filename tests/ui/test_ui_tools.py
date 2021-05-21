@@ -2292,6 +2292,8 @@ class TestMessageBox:
             "msg_body_edit_limit",
             "expected_msg_body_edit_enabled",
             "expected_editing_to_succeed",
+            "expected_footer_text_stream",
+            "expected_footer_text_private",
         ],
         [
             case(
@@ -2300,6 +2302,8 @@ class TestMessageBox:
                 60,
                 {"stream": False, "private": False},
                 {"stream": False, "private": False},
+                " You can't edit messages sent by other users.",
+                " You can't edit messages sent by other users.",
                 id="msg_sent_by_other_user",
             ),
             case(
@@ -2308,6 +2312,9 @@ class TestMessageBox:
                 60,
                 {"stream": False, "private": False},
                 {"stream": True, "private": False},
+                " Only topic editing allowed."
+                " Time Limit for editing the message body has been exceeded.",
+                " Time Limit for editing the message has been exceeded.",
                 id="topic_edit_only_after_time_limit",
             ),
             case(
@@ -2316,6 +2323,8 @@ class TestMessageBox:
                 60,
                 {"stream": False, "private": False},
                 {"stream": False, "private": False},
+                " Editing sent message is disabled.",
+                " Editing sent message is disabled.",
                 id="editing_not_allowed",
             ),
             case(
@@ -2324,6 +2333,8 @@ class TestMessageBox:
                 60,
                 {"stream": True, "private": True},
                 {"stream": True, "private": True},
+                None,
+                None,
                 id="all_conditions_met",
             ),
             case(
@@ -2332,6 +2343,8 @@ class TestMessageBox:
                 0,
                 {"stream": True, "private": True},
                 {"stream": True, "private": True},
+                None,
+                None,
                 id="no_msg_body_edit_limit",
             ),
         ],
@@ -2346,6 +2359,8 @@ class TestMessageBox:
         msg_body_edit_limit,
         expected_msg_body_edit_enabled,
         expected_editing_to_succeed,
+        expected_footer_text_stream,
+        expected_footer_text_private,
         key,
     ):
         varied_message = dict(message_fixture, **to_vary_in_each_message)
@@ -2363,6 +2378,8 @@ class TestMessageBox:
         write_box = msg_box.model.controller.view.write_box
         write_box.msg_edit_state = None
         write_box.msg_body_edit_enabled = None
+        report_error = msg_box.model.controller.report_error
+        report_warning = msg_box.model.controller.report_warning
         mocker.patch(BOXES + ".time", return_value=100)
 
         msg_box.keypress(size, key)
@@ -2380,6 +2397,16 @@ class TestMessageBox:
         else:
             assert write_box.msg_edit_state is None
             write_box.msg_write_box.set_edit_text.assert_not_called()
+        if message_type == "stream" and expected_footer_text_stream:
+            if expected_editing_to_succeed[message_type]:
+                report_warning.assert_called_once_with(expected_footer_text_stream)
+            else:
+                report_error.assert_called_once_with(expected_footer_text_stream)
+        elif message_type == "private" and expected_footer_text_private:
+            if expected_editing_to_succeed[message_type]:
+                report_warning.assert_called_once_with(expected_footer_text_private)
+            else:
+                report_error.assert_called_once_with(expected_footer_text_private)
 
     @pytest.mark.parametrize(
         "raw_html, expected_content",
