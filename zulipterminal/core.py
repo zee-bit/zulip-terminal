@@ -231,6 +231,9 @@ class Controller:
             height=to_show.height + 4,
         )
 
+    def is_popup_open(self) -> bool:
+        return isinstance(self.loop.widget, urwid.Overlay)
+
     def exit_popup(self) -> None:
         self.loop.widget = self.view
 
