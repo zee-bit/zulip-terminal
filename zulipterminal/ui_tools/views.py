@@ -944,6 +944,7 @@ class PopUpView(urwid.Frame):
         self.title = title
         self.log = urwid.SimpleFocusListWalker(body)
         self.body = urwid.ListBox(self.log)
+        self.is_popup_search_open = False
 
         max_cols, max_rows = controller.maximum_popup_dimensions()
 
@@ -1046,16 +1047,19 @@ class PopUpView(urwid.Frame):
     def keypress(self, size: urwid_Size, key: str) -> str:
         if is_command_key("GO_BACK", key) or is_command_key(self.command, key):
             self.controller.exit_popup()
-        elif is_command_key("GO_UP", key):
-            key = "up"
-        elif is_command_key("GO_DOWN", key):
-            key = "down"
-        elif is_command_key("SCROLL_UP", key):
-            key = "page up"
-        elif is_command_key("SCROLL_DOWN", key):
-            key = "page down"
-        elif is_command_key("GO_TO_BOTTOM", key):
-            key = "end"
+        # Disable navigational commands when inside search-box to
+        # allow typing secondary letter-keys.
+        if not self.is_popup_search_open:
+            if is_command_key("GO_UP", key):
+                key = "up"
+            elif is_command_key("GO_DOWN", key):
+                key = "down"
+            elif is_command_key("SCROLL_UP", key):
+                key = "page up"
+            elif is_command_key("SCROLL_DOWN", key):
+                key = "page down"
+            elif is_command_key("GO_TO_BOTTOM", key):
+                key = "end"
         return super().keypress(size, key)
 
 
@@ -1669,11 +1673,15 @@ class EmojiPickerView(PopUpView):
         ]
 
     def keypress(self, size: urwid_Size, key: str) -> str:
+        if is_command_key("ENTER", key) and self.controller.is_in_editor_mode():
+            self.is_popup_search_open = False
+            self.controller.exit_editor_mode()
         if (
             is_command_key("SEARCH_EMOJIS", key)
             and not self.controller.is_in_editor_mode()
         ):
             self.set_focus("header")
+            self.is_popup_search_open = True
             self.emoji_search.set_edit_text("")
             self.controller.enter_editor_mode_with(self.emoji_search)
             return key
