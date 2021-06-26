@@ -2089,6 +2089,7 @@ class TestModel:
 
         model.index = dict(
             messages={msg_id: {"flags": flags_before} for msg_id in indexed_ids},
+            unread_mentioned_msg_ids=set(),
             starred_msg_ids=set(
                 [msg_id for msg_id in indexed_ids if "starred" in flags_before]
             ),
