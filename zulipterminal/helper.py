@@ -1,5 +1,4 @@
 import os
-import platform
 import subprocess
 import time
 from collections import OrderedDict, defaultdict
@@ -28,11 +27,12 @@ import lxml.html
 from typing_extensions import TypedDict
 
 from zulipterminal.api_types import Composition, EmojiType, Message
+from zulipterminal.platform_code import PLATFORM
 
 
-MACOS = platform.system() == "Darwin"
-LINUX = platform.system() == "Linux"
-WSL = "microsoft" in platform.release().lower()
+MACOS = PLATFORM == "MacOS"
+LINUX = PLATFORM == "Linux"
+WSL = PLATFORM == "WSL"
 
 
 class StreamData(TypedDict):
