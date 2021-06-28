@@ -1,7 +1,6 @@
 import pytest
 from pytest import param as case
 
-import zulipterminal.helper
 from zulipterminal.helper import (
     canonicalize_color,
     classify_unread_counts,
@@ -282,24 +281,23 @@ def test_invalid_color_format(mocker, color):
 
 
 @pytest.mark.parametrize(
-    "OS, is_notification_sent",
+    "PLATFORM, is_notification_sent",
     [
+        # PLATFORM: Literal["WSL", "MacOS", "Linux", "unsupported"]
         pytest.param(
-            [True, False, False],
-            True,  # OS: [WSL, MACOS, LINUX]
+            "WSL",
+            True,
             marks=pytest.mark.xfail(reason="WSL notify disabled"),
         ),
-        ([False, True, False], True),
-        ([False, False, True], True),
-        ([False, False, False], False),  # Unsupported OS
+        ("MacOS", True),
+        ("Linux", True),
+        ("unsupported", False),  # Unsupported OS
     ],
 )
-def test_notify(mocker, OS, is_notification_sent):
+def test_notify(mocker, PLATFORM, is_notification_sent):
     title = "Author"
     text = "Hello!"
-    mocker.patch(MODULE + ".WSL", OS[0])
-    mocker.patch(MODULE + ".MACOS", OS[1])
-    mocker.patch(MODULE + ".LINUX", OS[2])
+    mocker.patch(MODULE + ".PLATFORM", PLATFORM)
     subprocess = mocker.patch(MODULE + ".subprocess")
     notify(title, text)
     assert subprocess.run.called == is_notification_sent
@@ -316,21 +314,16 @@ def test_notify(mocker, OS, is_notification_sent):
     ids=["X", "spaced_title", "single", "double"],
 )
 @pytest.mark.parametrize(
-    "OS, cmd_length",
+    "PLATFORM, cmd_length",
     [
-        ("LINUX", 4),
-        ("MACOS", 10),
+        ("Linux", 4),
+        ("MacOS", 10),
         pytest.param("WSL", 2, marks=pytest.mark.xfail(reason="WSL notify disabled")),
     ],
 )
-def test_notify_quotes(monkeypatch, mocker, OS, cmd_length, title, text):
+def test_notify_quotes(monkeypatch, mocker, PLATFORM, cmd_length, title, text):
     subprocess = mocker.patch(MODULE + ".subprocess")
-
-    for os in ("LINUX", "MACOS", "WSL"):
-        if os != OS:
-            monkeypatch.setattr(zulipterminal.helper, os, False)
-        else:
-            monkeypatch.setattr(zulipterminal.helper, os, True)
+    platform = mocker.patch(MODULE + ".PLATFORM", PLATFORM)
 
     notify(title, text)
 
