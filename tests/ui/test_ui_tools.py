@@ -2289,48 +2289,48 @@ class TestMessageBox:
         [
             "to_vary_in_each_message",
             "realm_editing_allowed",
-            "msg_body_edit_enabled",
             "msg_body_edit_limit",
-            "expect_editing_to_succeed",
+            "expected_msg_body_edit_enabled",
+            "expected_editing_to_succeed",
         ],
         [
             case(
                 {"sender_id": 2, "timestamp": 45},
                 True,
-                True,
                 60,
+                True,
                 False,
                 id="msg_sent_by_other_user",
             ),
             case(
                 {"sender_id": 1, "timestamp": 1},
                 True,
-                False,
                 60,
+                False,
                 True,
                 id="topic_edit_only_after_time_limit",
             ),
             case(
                 {"sender_id": 1, "timestamp": 45},
                 False,
-                True,
                 60,
+                True,
                 False,
                 id="editing_not_allowed",
             ),
             case(
                 {"sender_id": 1, "timestamp": 45},
                 True,
-                True,
                 60,
+                True,
                 True,
                 id="all_conditions_met",
             ),
             case(
                 {"sender_id": 1, "timestamp": 1},
                 True,
-                True,
                 0,
+                True,
                 True,
                 id="no_msg_body_edit_limit",
             ),
@@ -2341,11 +2341,11 @@ class TestMessageBox:
         mocker,
         message_fixture,
         widget_size,
-        expect_editing_to_succeed,
         to_vary_in_each_message,
         realm_editing_allowed,
-        msg_body_edit_enabled,
         msg_body_edit_limit,
+        expected_msg_body_edit_enabled,
+        expected_editing_to_succeed,
         key,
     ):
         varied_message = dict(message_fixture, **to_vary_in_each_message)
@@ -2369,17 +2369,17 @@ class TestMessageBox:
             and varied_message["timestamp"] == 1
             and msg_body_edit_limit > 0
         ):
-            expect_editing_to_succeed = False
+            expected_editing_to_succeed = False
 
         msg_box.keypress(size, key)
 
-        if expect_editing_to_succeed:
+        if expected_editing_to_succeed:
             assert write_box.msg_edit_state.message_id == varied_message["id"]
             assert write_box.msg_edit_state.old_topic == varied_message["subject"]
             write_box.msg_write_box.set_edit_text.assert_called_once_with(
                 "Edit this message"
             )
-            assert write_box.msg_body_edit_enabled == msg_body_edit_enabled
+            assert write_box.msg_body_edit_enabled == expected_msg_body_edit_enabled
         else:
             assert write_box.msg_edit_state is None
             write_box.msg_write_box.set_edit_text.assert_not_called()
