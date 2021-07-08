@@ -1308,7 +1308,7 @@ class TestModel:
         assert notify.called == is_notify_called
 
     @pytest.mark.parametrize(
-        "event, expected_times_messages_rerendered, expected_index, topic_view_enabled",
+        "event, topic_view_enabled, expected_times_messages_rerendered, expected_index",
         [
             case(
                 {  # Only subject of 1 message is updated.
@@ -1317,6 +1317,7 @@ class TestModel:
                     "stream_id": 10,
                     "message_ids": [1],
                 },
+                False,
                 1,
                 {
                     "messages": {
@@ -1336,7 +1337,6 @@ class TestModel:
                     "edited_messages": {1},
                     "topics": {10: []},
                 },
-                False,
                 id="Only subject of 1 message is updated",
             ),
             case(
@@ -1346,6 +1346,7 @@ class TestModel:
                     "stream_id": 10,
                     "message_ids": [1, 2],
                 },
+                False,
                 2,
                 {
                     "messages": {
@@ -1365,7 +1366,6 @@ class TestModel:
                     "edited_messages": {1},
                     "topics": {10: []},
                 },
-                False,
                 id="Subject of 2 messages is updated",
             ),
             case(
@@ -1374,6 +1374,7 @@ class TestModel:
                     "stream_id": 10,
                     "rendered_content": "<p>new content</p>",
                 },
+                False,
                 1,
                 {
                     "messages": {
@@ -1393,7 +1394,6 @@ class TestModel:
                     "edited_messages": {1},
                     "topics": {10: ["old subject"]},
                 },
-                False,
                 id="Message content is updated",
             ),
             case(
@@ -1404,6 +1404,7 @@ class TestModel:
                     "stream_id": 10,
                     "message_ids": [1],
                 },
+                False,
                 2,
                 {  # 2=update of subject & content
                     "messages": {
@@ -1423,7 +1424,6 @@ class TestModel:
                     "edited_messages": {1},
                     "topics": {10: []},
                 },
-                False,
                 id="Both message content and subject is updated",
             ),
             case(
@@ -1431,6 +1431,7 @@ class TestModel:
                     "message_id": 1,
                     "foo": "boo",
                 },
+                False,
                 0,
                 {
                     "messages": {
@@ -1450,7 +1451,6 @@ class TestModel:
                     "edited_messages": {1},
                     "topics": {10: ["old subject"]},
                 },
-                False,
                 id="Some new type of update which we don't handle yet",
             ),
             case(
@@ -1461,6 +1461,7 @@ class TestModel:
                     "stream_id": 10,
                     "message_ids": [3],
                 },
+                False,
                 0,
                 {
                     "messages": {
@@ -1480,7 +1481,6 @@ class TestModel:
                     "edited_messages": set(),
                     "topics": {10: []},  # This resets the cache
                 },
-                False,
                 id="message_id not present in index, topic view closed",
             ),
             case(
@@ -1491,6 +1491,7 @@ class TestModel:
                     "stream_id": 10,
                     "message_ids": [3],
                 },
+                True,
                 0,
                 {
                     "messages": {
@@ -1510,7 +1511,6 @@ class TestModel:
                     "edited_messages": set(),
                     "topics": {10: ["new subject", "old subject"]},
                 },
-                True,
                 id="message_id not present in index, topic view is enabled",
             ),
             case(
@@ -1521,6 +1521,7 @@ class TestModel:
                     "stream_id": 10,
                     "message_ids": [1],
                 },
+                True,
                 2,
                 {
                     "messages": {
@@ -1540,7 +1541,6 @@ class TestModel:
                     "edited_messages": {1},
                     "topics": {10: ["new subject", "old subject"]},
                 },
-                True,
                 id="Message content is updated and topic view is enabled",
             ),
         ],
@@ -1550,9 +1550,9 @@ class TestModel:
         mocker,
         model,
         event,
-        expected_index,
-        expected_times_messages_rerendered,
         topic_view_enabled,
+        expected_times_messages_rerendered,
+        expected_index,
     ):
         event["type"] = "update_message"
 
