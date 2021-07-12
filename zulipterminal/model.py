@@ -496,13 +496,14 @@ class Model:
         custom_emoji_data: NamedEmojiData = {
             emoji["name"]: {
                 "code": emoji_code,
+                "aliases": [],
                 "type": "realm_emoji",
             }
             for emoji_code, emoji in custom_emoji.items()
             if not emoji["deactivated"]
         }
         zulip_extra_emoji: NamedEmojiData = {
-            "zulip": {"code": "zulip", "type": "zulip_extra_emoji"}
+            "zulip": {"code": "zulip", "aliases": [], "type": "zulip_extra_emoji"}
         }
         all_emoji_data = {
             **typed_unicode_emoji_data,
